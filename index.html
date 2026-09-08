@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en" class="anim">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>HX Agent</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,100..900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --u: min(0.06410256vw, 0.12400794vh);
+    --vu: 0.09920635vh;
+    --inset-top: 41; --inset-bottom: 106;
+    --brand-gap: 12; --brand-fs: 18.49;
+    --links-y: 50.5; --links-gap: 50; --links-fs: 21.69;
+    --cta-w: 140; --cta-h: 43; --cta-r: 12; --cta-fs: 15.70;
+    --hero-gap: 51; --h1-fs: 36.25;
+    --display-ls: 0.0018em; --nav-ls: -0.0115em; --brand-ls: -0.0154em;
+    --cta-ls: -0.0127em; --body-ls: 0.007em; --proof-ls: 0.0065em;
+    --w-regular: 400; --w-display-wght: 410; --w-medium: 500; --w-semibold: 600;
+    --w-display: var(--w-display-wght); --w-nav: 400; --w-brand: 500; --w-cta: 520;
+    --w-body: var(--w-regular); --w-label: var(--w-medium);
+    --w-model: var(--w-regular); --w-proof: 480;
+    --card-w: 708; --card-h: 143; --card-r: 26;
+    --ph-fs: 11.5;
+    --chip-h: 30; --chip-r: 9; --chip-fs: 9.0; --chip-gap: 5.5;
+    --by-fs: 14.01; --logo-gap: 62;
+  }
+
+  @supports (height:100dvh) { :root { --u: min(0.06410256vw, 0.12400794dvh); --vu: 0.09920635dvh; } }
+  @media (min-width:1561px) { :root { --inset-top: 27; --inset-bottom: 74; } }
+
+  *,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: Inter, sans-serif;
+    background: #0a0d12; color: white;
+    height: 100vh; overflow: hidden; /* Stops whole page from scrolling */
+  }
+  button, input { font: inherit; color: inherit; background: none; border: 0; }
+  
+  .stage { position: fixed; inset: 0; overflow: hidden; background: #0a0d12; }
+  .stage-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; opacity: 0.8; }
+  
+  .frame {
+    position: absolute; inset: 0; z-index: 1;
+    display: flex; flex-direction: column;
+    padding: calc(var(--inset-top)*var(--vu)) calc(225*var(--u)) calc(var(--inset-bottom)*var(--vu));
+  }
+
+  /* Nav */
+  .nav { 
+    height: calc(43*var(--u)); display: flex; align-items: center; justify-content: space-between; position: relative; 
+    flex-shrink: 0; 
+  }
+  .brand { display: flex; align-items: center; gap: calc(var(--brand-gap)*var(--u)); font-size: calc(var(--brand-fs)*var(--u)); font-weight: var(--w-brand); }
+  .brand-mark { width: calc(34*var(--u)); height: calc(34*var(--u)); }
+  .brand span { transform: translateY(calc(1*var(--u))); }
+
+  /* Hero Section */
+  .hero { 
+    flex: 1; 
+    min-height: 0; /* CRITICAL FIX: Stops the container from infinitely expanding */
+    display: flex; flex-direction: column; align-items: center; justify-content: center; 
+    gap: calc(var(--hero-gap)*var(--vu)); padding-bottom: calc(4*var(--vu)); 
+  }
+  .h1 { font-size: calc(var(--h1-fs)*var(--u)); font-weight: var(--w-display); line-height: 1.10; text-align: center; transition: opacity 0.4s ease; flex-shrink: 0; }
+
+  /* Chat History UI */
+  .chat-container {
+    flex: 1; /* Takes up all available space above the input card */
+    min-height: 0; /* Prevents overflow */
+    width: 100%;
+    max-width: calc(var(--card-w)*var(--u));
+    margin: 0 auto;
+    display: none; 
+    flex-direction: column;
+    gap: 20px;
+    padding-bottom: 30px;
+    overflow-y: auto; /* Activates internal scroll */
+    scrollbar-width: none; 
+  }
+  .chat-container::-webkit-scrollbar { display: none; }
+
+  .chat-message {
+    max-width: 85%;
+    padding: 16px 22px;
+    border-radius: 20px;
+    font-size: 15px;
+    line-height: 1.5;
+    animation: e-populate 0.4s ease forwards;
+    flex-shrink: 0;
+  }
+  .chat-message.user {
+    align-self: flex-end;
+    background: linear-gradient(163deg, #FBBC94 0%, #F49D70 46%, #E88654 100%);
+    color: white;
+    border-bottom-right-radius: 4px;
+    box-shadow: 0 4px 15px rgba(210,110,60,.2);
+  }
+  .chat-message.agent {
+    align-self: flex-start;
+    background: rgba(41,41,43,.8);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,.1);
+    color: #e0e0e0;
+    border-bottom-left-radius: 4px;
+    white-space: pre-wrap; 
+  }
+  .typing-indicator { color: #F49D70; font-style: italic; }
+
+  /* Input Card */
+  .card {
+    width: calc(var(--card-w)*var(--u)); height: calc(var(--card-h)*var(--u));
+    border-radius: calc(var(--card-r)*var(--u)); 
+    flex-shrink: 0; /* CRITICAL FIX: Forces the card to stay its exact size at the bottom */
+    background: rgba(41,41,43,.955); backdrop-filter: blur(calc(26*var(--u))) saturate(112%);
+    box-shadow: inset 0 0 0 1px rgba(214,228,255,.14), 0 calc(22*var(--u)) calc(60*var(--u)) rgba(0,0,0,.30);
+    position: relative; transition: all 0.4s ease;
+  }
+  
+  .ph {
+    position: absolute; left: calc(27*var(--u)); top: calc(33*var(--u)); right: calc(24*var(--u));
+    width: calc(100% - 50*var(--u));
+    color: #fff; font-size: calc(var(--ph-fs)*var(--u)); font-weight: 400;
+    line-height: 1.35; background: transparent; border: none; outline: none;
+  }
+  .ph::placeholder { color: #8B8C8E; }
+
+  .tools { position: absolute; left: calc(19*var(--u)); top: calc(92*var(--u)); height: calc(30*var(--u)); right: calc(-1*var(--u)); }
+  .chips { display: flex; align-items: center; gap: calc(var(--chip-gap)*var(--u)); height: 100%; }
+  .chip {
+    height: calc(var(--chip-h)*var(--u)); border-radius: calc(var(--chip-r)*var(--u)); font-size: calc(var(--chip-fs)*var(--u));
+    font-weight: 500; color: #909093; background: linear-gradient(180deg, rgba(255,255,255,.088) 0%, rgba(255,255,255,.050) 45%, rgba(255,255,255,.038) 100%);
+    border: 1px solid rgba(255,255,255,.05); display: flex; align-items: center; padding: 0 calc(var(--pl)*var(--u));
+    gap: calc(var(--ig)*var(--u)); width: calc(var(--cw)*var(--u)); cursor: pointer;
+  }
+  
+  .right { position: absolute; inset: 0; pointer-events: none; }
+  .right > * { position: absolute; pointer-events: auto; }
+  .model { left: calc(510.2*var(--u)); top: calc(15.5*var(--u)); font-size: calc(10.4*var(--u)); color: #98999C; display: inline-flex; align-items: center; gap: calc(6.2*var(--u)); }
+  
+  .send {
+    left: calc(640*var(--u)); top: calc(2*var(--u));
+    width: calc(35*var(--u)); height: calc(35*var(--u)); border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(163deg, #FBBC94 0%, #F49D70 46%, #E88654 100%); cursor: pointer;
+  }
+  .send svg { width: calc(11.66*var(--u)); fill: #fff; }
+
+  /* Animations */
+  .anim { --e-primary: cubic-bezier(.16,1,.3,1); }
+  @keyframes e-focus { 0% { opacity: 0; transform: translateY(calc(14*var(--u))); filter: blur(calc(6*var(--u))); } 100% { opacity: 1; transform: none; filter: blur(0); } }
+  @keyframes e-panel { 0% { opacity: 0; transform: translateY(calc(18*var(--u))) scale(.985); } 100% { opacity: 1; transform: none; } }
+  @keyframes e-populate { 0% { opacity: 0; transform: translateY(10px); } 100% { opacity: 1; transform: none; } }
+  .anim .h1 { animation: e-focus 1.00s var(--e-primary) .30s both; }
+  .anim .card { animation: e-panel .90s var(--e-primary) .62s both; }
+
+  /* Responsive fixes */
+  @media (max-width:1180px) {
+    :root { --u: 1px; }
+    .card { width: min(100%, 760px); }
+    .chat-container { width: min(100%, 760px); }
+  }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <!-- Background Video -->
+    <video class="stage-video" autoplay muted loop playsinline src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260826_124724_bc041163-d651-425f-aea3-2acc1efc2c96.mp4"></video>
+    
+    <div class="frame">
+      <header class="nav">
+        <div class="brand">
+          <svg class="brand-mark" viewBox="0 0 34 34" fill="none">
+            <circle cx="17" cy="17" r="17" fill="#9C86CE"/>
+            <circle cx="17" cy="17" r="8.6" fill="#FFFFFF"/>
+            <circle cx="17" cy="17" r="3.7" fill="#151519"/>
+          </svg>
+          <span>HX Agent</span>
+        </div>
+      </header>
+
+      <main class="hero">
+        <!-- Headline fades out when chat starts -->
+        <h1 class="h1" id="headline">Solve queries. Analyze files. We'll handle it.</h1>
+        
+        <!-- Chat History Window -->
+        <div class="chat-container" id="chat-container"></div>
+
+        <!-- Input Form -->
+        <form class="card" onsubmit="handleQuery(event)">
+          <input type="text" class="ph" id="user-input" placeholder="Message HX (e.g. 'Read the project folder...')" autocomplete="off" autofocus>
+          
+          <div class="tools">
+            <div class="chips">
+              <button type="button" class="chip" style="--cw:107;--pl:12;--ig:3.7">
+                <span>Read PDF</span>
+              </button>
+              <button type="button" class="chip" style="--cw:108;--pl:16;--ig:3.9">
+                <span>Process Excel</span>
+              </button>
+            </div>
+            <div class="right">
+              <div class="model"><span>HX Engine</span></div>
+              <button type="submit" class="send" aria-label="Run AI">
+                <svg viewBox="0 0 12 12"><path d="M6 0L0 6h4v6h4V6h4L6 0z"/></svg>
+              </button>
+            </div>
+          </div>
+        </form>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    setTimeout(() => { document.documentElement.classList.remove('anim'); }, 2600);
+
+    const chatContainer = document.getElementById('chat-container');
+    const headline = document.getElementById('headline');
+    const inputField = document.getElementById('user-input');
+
+    const generateId = () => Math.random().toString(36).substr(2, 9);
+
+    function appendMessage(text, sender, isLoader = false) {
+      const msgId = generateId();
+      const div = document.createElement('div');
+      div.className = `chat-message ${sender}`;
+      div.id = `msg-${msgId}`;
+      
+      if (isLoader) {
+        div.innerHTML = `<span class="typing-indicator">HX is thinking...</span>`;
+      } else {
+        div.textContent = text; 
+      }
+
+      chatContainer.appendChild(div);
+      chatContainer.scrollTop = chatContainer.scrollHeight; 
+      return msgId;
+    }
+
+    async function handleQuery(e) {
+      e.preventDefault();
+      
+      const userText = inputField.value.trim();
+      if (!userText) return; 
+
+      // Initialize chat layout on first message
+      headline.style.display = 'none';
+      chatContainer.style.display = 'flex';
+      
+      inputField.value = '';
+
+      appendMessage(userText, 'user');
+      const loadingId = appendMessage('', 'agent', true);
+
+      try {
+        const response = await fetch("http://127.0.0.1:8000/api/ask-hx", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ prompt: userText })
+        });
+        
+        const data = await response.json();
+        
+        const aiBubble = document.getElementById(`msg-${loadingId}`);
+        aiBubble.innerHTML = ""; 
+        aiBubble.textContent = data.response; 
+        
+      } catch (error) {
+        const aiBubble = document.getElementById(`msg-${loadingId}`);
+        aiBubble.innerHTML = `<span style="color: #ff6b6b">Error: Could not connect to HX backend. Is 'uvicorn server:app' running?</span>`;
+      }
+      
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+  </script>
+</body>
+</html>
