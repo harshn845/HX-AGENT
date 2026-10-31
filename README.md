@@ -39,3 +39,5 @@ uvicorn server:app --reload
 
 ## Launch the UI:
 Open index.html using VS Code's Live Server (or just open the file in your browser). Type a prompt, hit send, and HX will handle the rest.
+
+TRY IT AND ENJOY!!
