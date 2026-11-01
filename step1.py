@@ -26,3 +26,6 @@ while True:
     reply = response.choices[0].message.content
     messages.append({"role" : "assistant" , "content" : reply})
     print("bot:", reply)
+
+
+    #USE THIS FOR CREATING A SIMPLE CHATBOT
